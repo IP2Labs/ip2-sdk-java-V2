@@ -1,6 +1,6 @@
 # Payments and Commerce with IP2
 ##Get started 
-Get started by signing up for a sandbox account [here] 
+Get started by signing up for a sandbox account here http://ec2-54-148-117-189.us-west-2.compute.amazonaws.com/Signin/
 ##Usage 
 The IP2 Java SDK helps you monitise your application by enabling your business to      
 1. Collect and make payments using MTN Mobile Money , Airtel Money , Bitcoin and whatever is next in payments    
