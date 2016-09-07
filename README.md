@@ -16,11 +16,11 @@ Add the following dependency to your project.
 <dependency>
   <groupId>ug.co.intelworld</groupId>
   <artifactId>IP2Library</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 ```
 
 Functionality    
-1. [Collect and Make payments](https://github.com/IP2Labs/ip2-sdk-java/wiki/Payments)  
-2. [Sell first moving digital goods like airtime , data , tickets , shopping vouchers and lots more](https://github.com/IP2Labs/ip2-sdk-java/wiki/Commerce)    
-3. [View my account details](https://github.com/IP2Labs/ip2-sdk-java/wiki/Accounts)  
+1. [Collect and Make payments](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Payments)  
+2. [Sell first moving digital goods like airtime , data , tickets , shopping vouchers and lots more](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Commerce)    
+3. [View my account details](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Accounts)  
