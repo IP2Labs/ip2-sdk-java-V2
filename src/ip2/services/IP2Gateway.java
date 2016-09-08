@@ -16,11 +16,11 @@ import ip2.interfaces.ResponseHandler;
 import ip2.utils.Environment;
 
 
-public class IP2Gateway extends GateWayImp implements ResponseHandler
+public class IP2Gateway extends GatewayImp implements ResponseHandler
 {	
 
-	public IP2Gateway(String userKey, String pass, Environment environment, String accountId, String subscriptionId) {
-		super(userKey, pass, environment, accountId, subscriptionId);
+	public IP2Gateway(Environment environment, String userKey, String pass, String accountId, String subscriptionId) {
+		super(environment, userKey, pass, accountId, subscriptionId);
 	
 	}
 
@@ -44,6 +44,35 @@ public class IP2Gateway extends GateWayImp implements ResponseHandler
 		getAccountDetails(IP2Gateway.this);
 	}
 	
+	public void getProducts(int offset, int count) throws IP2GatewayException
+	{
+		getProductDetails(offset, count, IP2Gateway.this);
+	}
+	
+	public void getPaymentMethods(int offset, int count) throws IP2GatewayException
+	{
+		getPaymentMethodDetails(offset, count,IP2Gateway.this);
+	}
+	
+	public void getCreditTransaction(String transactionId) throws IP2GatewayException
+	{
+		getCreditTrasanction(transactionId, IP2Gateway.this);
+	}
+	
+	public void getCreditTransactionsByDate(String earlierDate, String laterDate, int offset, int count) throws IP2GatewayException
+	{
+		getCreditTransactionByDate(earlierDate, laterDate, offset, count, IP2Gateway.this);
+	}
+	
+	public void getDebitTransaction(String transactionId) throws IP2GatewayException
+	{
+		getCreditTrasanction(transactionId, IP2Gateway.this);
+	}
+	
+	public void getDebitTransactionsByDate(String earlierDate, String laterDate, int offset, int count) throws IP2GatewayException
+	{
+		getCreditTransactionByDate(earlierDate, laterDate, offset, count, IP2Gateway.this);
+	}
 	
 
 	@Override

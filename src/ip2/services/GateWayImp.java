@@ -22,15 +22,15 @@ import ip2.factory.RequestPar;
 import ip2.factory.RequestParams;
 import ip2.factory.RequestReference;
 import ip2.factory.TransactionRequest;
+import ip2.helpers.HttpMethods;
 import ip2.helpers.IP2GatewayException;
 import ip2.helpers.NetworkBroker;
 import ip2.helpers.Response;
 import ip2.helpers.ResponseMessage;
 import ip2.interfaces.ResponseHandler;
 import ip2.utils.Environment;
-import ip2.utils.IP2Constants;
 
-public abstract class GateWayImp 
+public abstract class GatewayImp 
 {
 
 	private String userKey;
@@ -44,10 +44,11 @@ public abstract class GateWayImp
 	private ResponseMessage responseMessage;
 	private Environment environment;
 	
-	private String PRODUCTION_ENV = "https://gemini-api.azurewebsites.net";
-	private String SANDBOX_ENV = "http://ec2-54-148-117-189.us-west-2.compute.amazonaws.com:84";
+	private final String PRODUCTION_ENV = "https://gemini-api.azurewebsites.net";
+	private final String SANDBOX_ENV = "http://ec2-54-148-117-189.us-west-2.compute.amazonaws.com:84";
+	private final String prodArgErrorMessage = "Product count should be greater than 0";
 	
-	public GateWayImp(String userKey, String pass, Environment environment, String accountId, String subscriptionId)
+	public GatewayImp(Environment environment, String userKey, String pass, String accountId, String subscriptionId)
 	{
 		this.userKey = userKey;
 		this.pass = pass;
@@ -101,7 +102,6 @@ public abstract class GateWayImp
 			for(Map.Entry<String, String> map: prodRf.entrySet())
 			{
 				prodObject.put(map.getKey(), map.getValue());
-				System.out.println(map.getKey() +"="+map.getValue());
 			}
 		}
 		
@@ -161,7 +161,7 @@ public abstract class GateWayImp
 		
 		
 	    try {
-			startTransaction(object.toString(), resource, generateHmacHeaders(IP2Constants.POST, resource), IP2Constants.POST);
+			startTransaction(object.toString(), resource, generateHmacHeaders(HttpMethods.POST, resource), HttpMethods.POST);
 		} catch (MalformedURLException e) {
 			
 		} catch (IOException e) {
@@ -185,47 +185,114 @@ public abstract class GateWayImp
 		}
 	}
 	
-	private void startTransaction(String entity, String resource, Map<String, String> headers, String method) throws MalformedURLException, IP2GatewayException
+	private void startTransaction(String entity, String resource, Map<String, String> headers, HttpMethods methods) throws MalformedURLException, IP2GatewayException
 	{
-		switch(environment)
-		{
-		case PRODUCTION:
-			try {
-				returnResponse(NetworkBroker.productionHttpRequest(method, PRODUCTION_ENV.concat(resource), headers, entity, serverTimeout, connectionTimeout));
-			} catch (IOException e1) {
-				
-				e1.printStackTrace();
-			}
-		    break;
-		case SANDBOX:
-			
-			try {
-				
-				returnResponse(NetworkBroker.sandboxHttpRequest(method, SANDBOX_ENV.concat(resource), headers, entity, serverTimeout, connectionTimeout));
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			break;
-		
-		}
-			
+		responseCaller(resource, methods, entity);
+	
 	}
 	
 	
+	protected <T> void getProductDetails(int offset, int count, T callback) throws IP2GatewayException
+	{
+		if(count < 1)
+		{
+			try {
+				throw new IP2GatewayException(prodArgErrorMessage);
+			} catch (IP2GatewayException e) {
+				throw new IllegalArgumentException(e.getMessage());
+			}
+		}
+		else
+		{
+			responseHandler = (ResponseHandler)callback;
+			String prodResource = "/api/v2/products?offset="+offset+"&count="+count;
+			responseCaller(prodResource, HttpMethods.GET, null);
+		}
+		
+	}
 	
-	public <T> void getAccountDetails(T callback) throws IP2GatewayException {
+	
+	protected <T> void getPaymentMethodDetails(int offset, int count, T callback) throws IP2GatewayException
+	{
+		if(count < 1)
+		{
+			try {
+				throw new IP2GatewayException(prodArgErrorMessage);
+			} catch (IP2GatewayException e) {
+				throw new IllegalArgumentException(e.getMessage());
+			}
+		}
+		else
+		{
+			responseHandler = (ResponseHandler)callback;
+			String payMethodResource = "/api/v2/paymentMethods?offset="+offset+"&count="+count;
+			responseCaller(payMethodResource, HttpMethods.GET, null);
+		}
+		
+		
+	}
+	
+	
+	protected <T> void getAccountDetails(T callback) throws IP2GatewayException {
 		
 		responseHandler = (ResponseHandler)callback;
 		
 		String accountResource = "/api/v2/accounts/".concat(subscriptionId).concat("/").concat(accountId);
-		Map<String, String> headers = generateHmacHeaders(IP2Constants.GET, accountResource);
+		responseCaller(accountResource, HttpMethods.GET, null);
+		
+	}
+	
+	protected <T> void getCreditTrasanction(String transactionId, T callback) throws IP2GatewayException
+	{
+		responseHandler = (ResponseHandler)callback;
+		String credResource = "/api/v2/transactions/credits/"+accountId.concat("/")
+				.concat(subscriptionId).concat("?transactionId=").concat(transactionId);
+		
+		responseCaller(credResource, HttpMethods.GET, null);
+		
+	}
+	
+	protected <T> void getCreditTransactionByDate(String earlierDate, String laterDate, int offset, int count, T callback) throws IP2GatewayException
+	{
+		responseHandler = (ResponseHandler)callback;
+		
+		String credDateResource = "/api/v2/transactions/credits/"+subscriptionId+"/"+accountId+"?earlierDate="+earlierDate+"&laterDate="+laterDate+
+			  "&offset="+offset+"&count="+count;
+		
+		responseCaller(credDateResource, HttpMethods.GET, null);
+	}
+	
+	//////////////
+	protected <T> void getDebitTrasanction(String transactionId, T callback) throws IP2GatewayException
+	{
+		responseHandler = (ResponseHandler)callback;
+		String credResource = "/api/v2/transactions/debits/"+accountId.concat("/")
+				.concat(subscriptionId).concat("?transactionId=").concat(transactionId);
+		
+		responseCaller(credResource, HttpMethods.GET, null);
+		
+	}
+	
+	protected <T> void getDebitTransactionByDate(String earlierDate, String laterDate, int offset, int count, T callback) throws IP2GatewayException
+	{
+		responseHandler = (ResponseHandler)callback;
+		
+		String credDateResource = "/api/v2/transactions/debits/"+subscriptionId+"/"+accountId+"?earlierDate="+earlierDate+"&laterDate="+laterDate+
+			  "&offset="+offset+"&count="+count;
+		
+		responseCaller(credDateResource, HttpMethods.POST, "");
+	}
+	
+	private void responseCaller(String resource, HttpMethods methods, String entity) throws IP2GatewayException
+	{
+		Map<String, String> headers = generateHmacHeaders(methods, resource);
 		switch(environment)
 		{
 		case PRODUCTION:
 			 try {
-				returnResponse(NetworkBroker.productionHttpRequest(IP2Constants.GET, PRODUCTION_ENV.concat(accountResource), headers, null, serverTimeout, connectionTimeout));
+				returnResponse(NetworkBroker.productionHttpRequest(methods.name(), PRODUCTION_ENV.concat(resource), headers, entity, serverTimeout, connectionTimeout));
 			} catch (MalformedURLException e1) {
-				// TODO Auto-generated catch block
+				
 				e1.printStackTrace();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -234,7 +301,7 @@ public abstract class GateWayImp
 			break;
 		case SANDBOX:
 			try {
-				returnResponse(NetworkBroker.sandboxHttpRequest(IP2Constants.GET, SANDBOX_ENV.concat(accountResource), headers, null, serverTimeout, connectionTimeout));
+				returnResponse(NetworkBroker.sandboxHttpRequest(methods.name(), SANDBOX_ENV.concat(resource), headers, entity, serverTimeout, connectionTimeout));
 			} catch (MalformedURLException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -245,10 +312,7 @@ public abstract class GateWayImp
 			break;
 		}
 		
-		
-		
 	}
-	
 	
 	private void returnResponse(ResponseMessage responseMessage)
 	{
@@ -258,7 +322,7 @@ public abstract class GateWayImp
 	
 	
 	
-	private Map<String, String> generateHmacHeaders(String requestMethod,
+	private Map<String, String> generateHmacHeaders(HttpMethods method,
 			String requestUri) throws IP2GatewayException {
 
 		HmacAuthHeadersImpl hmac = new HmacAuthHeadersImpl(
@@ -266,7 +330,7 @@ public abstract class GateWayImp
 				Constants.HMAC_SHA512, Constants.MD_SHA_512, Constants.MD5);
 
 		try {
-			return hmac.getHeadersAsMap(requestMethod, requestUri);
+			return hmac.getHeadersAsMap(method.name(), requestUri);
 			
 		} catch (InvalidKeyException | NoSuchAlgorithmException
 				| EmptyOrNullException | UnsupportedEncodingException ex) {

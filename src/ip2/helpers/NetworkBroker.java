@@ -1,7 +1,5 @@
 package ip2.helpers;
 
-import ip2.utils.IP2Constants;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,7 +87,7 @@ public class NetworkBroker
 				}
 			}
 			
-			if(http_method.equals(IP2Constants.POST))
+			if(http_method.equals(HttpMethods.POST.name()))
 			{
 				connection.setDoOutput(true);
 
@@ -138,11 +136,10 @@ public class NetworkBroker
 			throws MalformedURLException, IOException, IP2GatewayException {
 
 		URL m_url = new URL(url_);
-		
-		System.out.println(url_);
 
 		ResponseMessage message = new ResponseMessage();
 		HttpURLConnection connection = null;
+		OutputStream os = null;
 		int responseCode = 0;
 		try {
 			connection = (HttpURLConnection) m_url.openConnection();
@@ -161,17 +158,17 @@ public class NetworkBroker
 				
 			}
 
-			if (http_method.equals(IP2Constants.POST)) {
+			if (http_method.equals(HttpMethods.POST.name())) {
 				connection.setDoOutput(true);
 
 				if (entity != null) {
 					connection.setRequestProperty("Content-Type",
 							"application/json; charset=UTF-8");
 
-					try (OutputStream os = connection.getOutputStream()) {
-						os.write(entity.getBytes("UTF-8"));
-						os.flush();
-					}
+					os = connection.getOutputStream();
+				    os.write(entity.getBytes("UTF-8"));
+				    os.flush();
+					
 
 				}
 			}
@@ -186,7 +183,6 @@ public class NetworkBroker
 				is = connection.getInputStream();
 			}
 			final String resp = getResponseMessage(is);
-			connection.disconnect();
 			
 			if(isJSON(resp))
 			{
@@ -204,12 +200,14 @@ public class NetworkBroker
 			}
 			else
 			{
-				message.setResponse(genError);
+				message.setResponse(resp);
 				message.setStatusCode(-1);
 			}
 			
-			
-			
+			if(os != null)
+			{
+				os.close();
+			}
 			
 			return message;
 		} 
@@ -228,9 +226,34 @@ public class NetworkBroker
 				message.setStatusCode(-1);
 			}
 			
+			if(os != null)
+			{
+				os.close();
+			}
+			
 			return message;
 			
-		} catch (Exception ex) {
+		}
+		catch(IOException ex)
+		{
+			if(ex.getMessage() != null)
+			{
+				message.setResponse(ex.getMessage());
+				message.setStatusCode(-1);
+			}
+			else
+			{
+				message.setResponse(genError);
+				message.setStatusCode(-1);
+			}
+			if(os != null)
+			{
+				os.close();
+			}
+			
+			return message;
+		}
+		catch (Exception ex) {
 
 			if(getResponseMessage(connection.getErrorStream()) != null)
 			{
@@ -246,6 +269,10 @@ public class NetworkBroker
 			{
 				message.setResponse(genError);
 				message.setStatusCode(-1);
+			}
+			if(os != null)
+			{
+				os.close();
 			}
 			
 			return message;
@@ -286,6 +313,11 @@ public class NetworkBroker
 				builder.append(line);
 			}
 		}
+		if(is != null)
+		{
+			is.close();
+		}
+		
 		return builder.toString();
 
 	}
