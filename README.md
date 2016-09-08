@@ -23,4 +23,4 @@ Add the following dependency to your project.
 Functionality    
 1. [Collect and Make payments](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Payments)  
 2. [Sell first moving digital goods like airtime , data , tickets , shopping vouchers and lots more](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Commerce)    
-3. [View my account details](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Accounts)  
+3. [Get account and transaction details](https://github.com/IP2Labs/ip2-sdk-java-V2/wiki/Accounts)  
