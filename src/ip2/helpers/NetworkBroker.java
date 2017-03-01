@@ -1,5 +1,7 @@
 package ip2.helpers;
 
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,8 +59,7 @@ public class NetworkBroker
 	 *             service, this exception will be thrown
 	 * @throws IOException
 	 *             Any input or output errors will raise IOException
-	 * @throws ip2.exceptions.IP2GatewayException
-	 *             when it fails to bypass SSL verification for tests
+	 * 
 	 */
 	public static ResponseMessage productionHttpRequest(String http_method,
 			String url_, Map<String, String> headers, String entity,
@@ -67,9 +68,11 @@ public class NetworkBroker
 
 		URL m_url = new URL(url_);
 
+
 		HttpsURLConnection connection = null;
 		int responseCode = 0;
 		ResponseMessage message = new ResponseMessage();
+		OutputStreamWriter out = null;
 		try {
 			connection = (HttpsURLConnection) m_url
 					.openConnection();
@@ -93,10 +96,10 @@ public class NetworkBroker
 
 				if (entity != null) {
 
-					try (OutputStreamWriter out = new OutputStreamWriter(
-							connection.getOutputStream())) {
-						out.write(entity);
-					}
+					out = new OutputStreamWriter(connection.getOutputStream()); 
+					out.write(entity);
+					out.flush();
+					
 				}
 			}
 
@@ -115,18 +118,113 @@ public class NetworkBroker
 			
 			message.setResponse(resp);
 			message.setStatusCode(responseCode);
+			
+			if(out != null)
+			{
+				out.close();
+			}
+			
 			return message;
 
 		} catch (SocketTimeoutException ex) {
-			message.setResponse(getResponseMessage(connection.getErrorStream()));
-			message.setStatusCode(responseCode);
+			if(connection != null)
+			{
+				String s = ex.toString();
+                if(s != null)
+                {
+                    String[] splitS = s.split("\\.");
+
+                    StringBuilder builder = new StringBuilder();
+                    int i = 0;
+                    for (String str : splitS[2].split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")) {
+                        if(i>0)
+                        {
+                           str = str.toLowerCase();
+                        }
+                        if(i ==2)
+                        {
+                            builder.append(str);
+                        }
+                        else
+                        {
+                            builder.append(str+" ");
+                        }
+                        i++;
+                    }
+                    message.setResponse(builder.toString());
+    				message.setStatusCode(-1);
+    			
+                }
+                else
+                {
+                	message.setResponse(genError);
+    				message.setStatusCode(-1);
+                }
+			}
+			if(out != null)
+			{
+				out.close();
+			}
 			return message;
+			
 		} catch (IOException ex) 
 		{
-			message.setResponse(ex.getMessage());
-			message.setStatusCode(responseCode);
+			if(responseCode == 0)
+			{
+				message.setResponse("Connection to server failed, make sure you can connect to internet and try again.");
+				message.setStatusCode(-1);
+			}
+			else
+			{
+				if(ex.getMessage() != null)
+				{
+					message.setResponse(ex.getMessage());
+					message.setStatusCode(-1);
+				}
+				else
+				{
+					message.setResponse(genError);
+					message.setStatusCode(-1);
+				}
+			}
+			
+			if(out != null)
+			{
+				out.close();
+			}
+			
 			return message;
 		}
+		
+		catch (Exception ex) {
+
+			if(responseCode == 0)
+			{
+				message.setResponse("Connection to server failed, make sure you can connect to internet and try again.");
+				message.setStatusCode(-1);
+			}
+			else
+			{
+			    if(ex.getMessage() != null)
+				{
+					message.setResponse(ex.getMessage());
+					message.setStatusCode(-1);
+				}
+				else
+				{
+					message.setResponse(genError);
+					message.setStatusCode(-1);
+				}
+			}
+			
+			if(out != null)
+			{
+				out.close();
+			}
+			
+			return message;
+		}
+		
 
 	}
 
@@ -141,6 +239,7 @@ public class NetworkBroker
 		HttpURLConnection connection = null;
 		OutputStream os = null;
 		int responseCode = 0;
+		
 		try {
 			connection = (HttpURLConnection) m_url.openConnection();
 
@@ -184,6 +283,7 @@ public class NetworkBroker
 			}
 			final String resp = getResponseMessage(is);
 			
+			
 			if(isJSON(resp))
 			{
 				if(ParseResponse.returnStatus(resp) == 0)
@@ -215,11 +315,40 @@ public class NetworkBroker
 		
 		catch (SocketTimeoutException ex)
 		{
-			if(ex.getMessage() != null)
+			if(connection != null)
 			{
-				message.setResponse(ex.getMessage());
-				message.setStatusCode(-1);
+				String s = ex.toString();
+                if(s != null)
+                {
+                    String[] splitS = s.split("\\.");
+
+                    StringBuilder builder = new StringBuilder();
+                    int i = 0;
+                    for (String str : splitS[2].split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")) {
+                        if(i>0)
+                        {
+                           str = str.toLowerCase();
+                        }
+                        if(i ==2)
+                        {
+                            builder.append(str);
+                        }
+                        else
+                        {
+                            builder.append(str+" ");
+                        }
+                        i++;
+                    }
+                    message.setResponse(builder.toString());
+    				message.setStatusCode(-1);
+                }
+                else
+                {
+                	message.setResponse(genError);
+    				message.setStatusCode(-1);
+                }
 			}
+			
 			else
 			{
 				message.setResponse(genError);
@@ -236,16 +365,25 @@ public class NetworkBroker
 		}
 		catch(IOException ex)
 		{
-			if(ex.getMessage() != null)
+			if(responseCode == 0)
 			{
-				message.setResponse(ex.getMessage());
+				message.setResponse("Connection to server failed, make sure you can connect to internet and try again.");
 				message.setStatusCode(-1);
 			}
 			else
 			{
-				message.setResponse(genError);
-				message.setStatusCode(-1);
+				if(ex.getMessage() != null)
+				{
+					message.setResponse(ex.getMessage());
+					message.setStatusCode(-1);
+				}
+				else
+				{
+					message.setResponse(genError);
+					message.setStatusCode(-1);
+				}
 			}
+			
 			if(os != null)
 			{
 				os.close();
@@ -255,21 +393,25 @@ public class NetworkBroker
 		}
 		catch (Exception ex) {
 
-			if(getResponseMessage(connection.getErrorStream()) != null)
+			if(responseCode == 0)
 			{
-				message.setResponse(getResponseMessage(connection.getErrorStream()));
-				message.setStatusCode(-1);
-			}
-			else if(ex.getMessage() != null)
-			{
-				message.setResponse(ex.getMessage());
+				message.setResponse("Connection to server failed, make sure you can connect to internet and try again.");
 				message.setStatusCode(-1);
 			}
 			else
 			{
-				message.setResponse(genError);
-				message.setStatusCode(-1);
+				if(ex.getMessage() != null)
+				{
+					message.setResponse(ex.getMessage());
+					message.setStatusCode(-1);
+				}
+				else
+				{
+					message.setResponse(genError);
+					message.setStatusCode(-1);
+				}
 			}
+			
 			if(os != null)
 			{
 				os.close();

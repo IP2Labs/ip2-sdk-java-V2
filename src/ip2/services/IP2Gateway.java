@@ -16,7 +16,7 @@ import ip2.interfaces.ResponseHandler;
 import ip2.utils.Environment;
 
 
-public class IP2Gateway extends GatewayImp implements ResponseHandler
+public class IP2Gateway extends GatewayImp 
 {	
 
 	public IP2Gateway(Environment environment, String userKey, String pass, String accountId, String subscriptionId) {
@@ -24,54 +24,61 @@ public class IP2Gateway extends GatewayImp implements ResponseHandler
 	
 	}
 
-	public void requestCredit(TransactionRequest transactionRequest) throws IP2GatewayException
+	public void requestCredit(TransactionRequest transactionRequest, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		initiateTransaction(1,transactionRequest, IP2Gateway.this);
+	
+		
+		initiateTransaction(1,transactionRequest, responseHandler, IP2Gateway.this);
 	}
 	
-	public void requestDebit(TransactionRequest transactionRequest) throws IP2GatewayException
+	public void requestDebit(TransactionRequest transactionRequest, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		initiateTransaction(0, transactionRequest, IP2Gateway.this);
+		initiateTransaction(0, transactionRequest, responseHandler, IP2Gateway.this);
 	}
 	
-	public void requestTicket(TransactionRequest transactionRequest) throws IP2GatewayException
+	public void requestTicket(TransactionRequest transactionRequest, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		initiateTransaction(0, transactionRequest, IP2Gateway.this);
+		initiateTransaction(0, transactionRequest, responseHandler,  IP2Gateway.this);
 	}
 	
-	public void getAccount() throws IP2GatewayException
+	public void getAccount(ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getAccountDetails(IP2Gateway.this);
+		getAccountDetails(responseHandler, IP2Gateway.this);
 	}
 	
-	public void getProducts(int offset, int count) throws IP2GatewayException
+	public void getProducts(int offset, int count, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getProductDetails(offset, count, IP2Gateway.this);
+		getProductDetails(offset, count, responseHandler,IP2Gateway.this);
 	}
 	
-	public void getPaymentMethods(int offset, int count) throws IP2GatewayException
+	public void getPaymentMethods(int offset, int count,ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getPaymentMethodDetails(offset, count,IP2Gateway.this);
+		getPaymentMethodDetails(offset, count, responseHandler, IP2Gateway.this);
 	}
 	
-	public void getCreditTransaction(String transactionId) throws IP2GatewayException
+	public void getCreditTransaction(String transactionId, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getCreditTrasanction(transactionId, IP2Gateway.this);
+		getCreditTrasanction(transactionId,responseHandler, IP2Gateway.this);
 	}
 	
-	public void getCreditTransactionsByDate(String earlierDate, String laterDate, int offset, int count) throws IP2GatewayException
+	public void getCreditTransactionsByDate(String earlierDate, String laterDate, int offset, int count, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getCreditTransactionByDate(earlierDate, laterDate, offset, count, IP2Gateway.this);
+		getCreditTransactionByDate(earlierDate, laterDate, offset, count, responseHandler, IP2Gateway.this);
 	}
 	
-	public void getDebitTransaction(String transactionId) throws IP2GatewayException
+	public void getDebitTransaction(String transactionId, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getCreditTrasanction(transactionId, IP2Gateway.this);
+		getCreditTrasanction(transactionId, responseHandler, IP2Gateway.this);
 	}
 	
-	public void getDebitTransactionsByDate(String earlierDate, String laterDate, int offset, int count) throws IP2GatewayException
+	public void getDebitTransactionsByDate(String earlierDate, String laterDate, int offset, int count, ResponseHandler responseHandler) throws IP2GatewayException
 	{
-		getCreditTransactionByDate(earlierDate, laterDate, offset, count, IP2Gateway.this);
+		getCreditTransactionByDate(earlierDate, laterDate, offset, count, responseHandler, IP2Gateway.this);
+	}
+	
+	public void getAccountBalance(String accountId, ResponseHandler responseHandler) throws IP2GatewayException
+	{
+		getAccountBalance(accountId, responseHandler, IP2Gateway.this);
 	}
 	
 
@@ -87,21 +94,8 @@ public class IP2Gateway extends GatewayImp implements ResponseHandler
 		super.setConnectTimeout(time, unit);
 	}
 
-	@Override
-	public void setResponseListener(ResponseHandler response) {
-		
-		super.setResponseListener(response);
-	}
-
-
 	
 
-
-	@Override
-	public void callback(Response response) {
-		// TODO Auto-generated method stub
-		
-	}
 
 
 	

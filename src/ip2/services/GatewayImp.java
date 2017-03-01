@@ -69,9 +69,9 @@ public abstract class GatewayImp
 		this.connectionTimeout = (int)unit.toMillis(time);
 	}
 	
-	protected <T>  void  initiateTransaction(int requestType, TransactionRequest request, T context) throws IP2GatewayException
+	protected <T>  void  initiateTransaction(int requestType, TransactionRequest request, ResponseHandler handler,  T context) throws IP2GatewayException
 	{
-		responseHandler = (ResponseHandler)context;
+		this.responseHandler = handler;
 		
 		prepareTrasaction(requestType, request.getProductReference(), request.getChannelReference(), 
 				request.getPaymentMethodRefrence(), request.getMetaDataReference(), request.getRequestParams(), request.getRequestReference());
@@ -91,7 +91,7 @@ public abstract class GatewayImp
 		object.put("Amount", params.getAmount());
 		object.put("CurrencyCode", params.getCurrencyCode());
 		object.put("CountryCode", params.getCountryCode());
-		object.put("Memo", params.getMemo());
+		object.put("memo", params.getMemo());
 		object.put("ChannelId", params.getChannelId());
 		object.put("CustomerId", params.getCustomerId());
 		
@@ -192,7 +192,7 @@ public abstract class GatewayImp
 	}
 	
 	
-	protected <T> void getProductDetails(int offset, int count, T callback) throws IP2GatewayException
+	protected <T> void getProductDetails(int offset, int count, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
 		if(count < 1)
 		{
@@ -204,7 +204,7 @@ public abstract class GatewayImp
 		}
 		else
 		{
-			responseHandler = (ResponseHandler)callback;
+			this.responseHandler = handler;
 			String prodResource = "/api/v2/products?offset="+offset+"&count="+count;
 			responseCaller(prodResource, HttpMethods.GET, null);
 		}
@@ -212,7 +212,7 @@ public abstract class GatewayImp
 	}
 	
 	
-	protected <T> void getPaymentMethodDetails(int offset, int count, T callback) throws IP2GatewayException
+	protected <T> void getPaymentMethodDetails(int offset, int count, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
 		if(count < 1)
 		{
@@ -224,7 +224,7 @@ public abstract class GatewayImp
 		}
 		else
 		{
-			responseHandler = (ResponseHandler)callback;
+			this.responseHandler = handler;
 			String payMethodResource = "/api/v2/paymentMethods?offset="+offset+"&count="+count;
 			responseCaller(payMethodResource, HttpMethods.GET, null);
 		}
@@ -233,18 +233,18 @@ public abstract class GatewayImp
 	}
 	
 	
-	protected <T> void getAccountDetails(T callback) throws IP2GatewayException {
+	protected <T> void getAccountDetails(ResponseHandler handler, T callback) throws IP2GatewayException {
 		
-		responseHandler = (ResponseHandler)callback;
+		this.responseHandler = handler;
 		
 		String accountResource = "/api/v2/accounts/".concat(subscriptionId).concat("/").concat(accountId);
 		responseCaller(accountResource, HttpMethods.GET, null);
 		
 	}
 	
-	protected <T> void getCreditTrasanction(String transactionId, T callback) throws IP2GatewayException
+	protected <T> void getCreditTrasanction(String transactionId, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
-		responseHandler = (ResponseHandler)callback;
+		this.responseHandler = handler;
 		String credResource = "/api/v2/transactions/credits/"+accountId.concat("/")
 				.concat(subscriptionId).concat("?transactionId=").concat(transactionId);
 		
@@ -252,9 +252,9 @@ public abstract class GatewayImp
 		
 	}
 	
-	protected <T> void getCreditTransactionByDate(String earlierDate, String laterDate, int offset, int count, T callback) throws IP2GatewayException
+	protected <T> void getCreditTransactionByDate(String earlierDate, String laterDate, int offset, int count, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
-		responseHandler = (ResponseHandler)callback;
+		this.responseHandler = handler;
 		
 		String credDateResource = "/api/v2/transactions/credits/"+subscriptionId+"/"+accountId+"?earlierDate="+earlierDate+"&laterDate="+laterDate+
 			  "&offset="+offset+"&count="+count;
@@ -263,9 +263,9 @@ public abstract class GatewayImp
 	}
 	
 	//////////////
-	protected <T> void getDebitTrasanction(String transactionId, T callback) throws IP2GatewayException
+	protected <T> void getDebitTrasanction(String transactionId, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
-		responseHandler = (ResponseHandler)callback;
+		this.responseHandler = handler;
 		String credResource = "/api/v2/transactions/debits/"+accountId.concat("/")
 				.concat(subscriptionId).concat("?transactionId=").concat(transactionId);
 		
@@ -273,14 +273,22 @@ public abstract class GatewayImp
 		
 	}
 	
-	protected <T> void getDebitTransactionByDate(String earlierDate, String laterDate, int offset, int count, T callback) throws IP2GatewayException
+	protected <T> void getDebitTransactionByDate(String earlierDate, String laterDate, int offset, int count, ResponseHandler handler, T callback) throws IP2GatewayException
 	{
-		responseHandler = (ResponseHandler)callback;
+		this.responseHandler = handler;
 		
 		String credDateResource = "/api/v2/transactions/debits/"+subscriptionId+"/"+accountId+"?earlierDate="+earlierDate+"&laterDate="+laterDate+
 			  "&offset="+offset+"&count="+count;
 		
 		responseCaller(credDateResource, HttpMethods.POST, "");
+	}
+	
+	protected <T> void getAccountBalance(String accountId, ResponseHandler handler, T callback) throws IP2GatewayException
+	{
+		this.responseHandler = handler;
+		String balanceResource = "/api/v2/accounts/Balance/"+accountId;
+		
+		responseCaller(balanceResource, HttpMethods.GET, null);
 	}
 	
 	private void responseCaller(String resource, HttpMethods methods, String entity) throws IP2GatewayException
@@ -317,7 +325,12 @@ public abstract class GatewayImp
 	private void returnResponse(ResponseMessage responseMessage)
 	{
 		this.responseMessage = responseMessage;
-		setResponseListener(responseHandler);
+		
+		Response response = new Response();
+		response.setMessage(responseMessage.getResponse());
+		response.setStatusCode(responseMessage.getStatusCode());
+		responseHandler.callback(response);
+		
 	}
 	
 	
@@ -341,14 +354,14 @@ public abstract class GatewayImp
 	}
 	
 	
-	public void setResponseListener(ResponseHandler responseHandler)
+	/*public void setResponseListener(ResponseHandler responseHandler)
 	{
 		Response response = new Response();
 		response.setMessage(responseMessage.getResponse());
 		response.setStatusCode(responseMessage.getStatusCode());
 		responseHandler.callback(response);
 	}
-	
+	*/
 	
 	
 		
