@@ -16,7 +16,7 @@ Add the following dependency to your project.
 <dependency>
   <groupId>ug.co.intelworld</groupId>
   <artifactId>IP2Library</artifactId>
-  <version>0.2</version>
+  <version>0.3</version>
 </dependency>
 ```
 
