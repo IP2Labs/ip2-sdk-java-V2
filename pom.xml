@@ -46,6 +46,8 @@
       <url>https://intelworld.international</url>
    </organization>
    
+   <url>https://github.com/IP2Labs/ip2-sdk-java-V2</url>
+   
    <developers>
       <developer>
          <email>odich@gmail.com</email>
@@ -76,16 +78,12 @@
    <scm>
       <url>https://github.com/IP2Labs/ip2-sdk-java-V2</url>
    </scm>
-   
-   <distributionManagement>
+ 
+    <distributionManagement>
   <snapshotRepository>
     <id>ossrh</id>
     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
   </snapshotRepository>
-  <repository>
-    <id>ossrh</id>
-    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-  </repository>
 </distributionManagement>
    
    <build>
